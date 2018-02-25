@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' integrity='sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7' crossorigin='anonymous'>
+    <link rel='stylesheet' href='assets/css/style.css'>
+</head>
+<body>
+    
+    <div class="container">
+        <h1>GIPHY Search</h1>
+    
+        <!-- Rendered buttons will get dumped Here  -->
+        <div id="buttons-view"></div>
+    
+        <form id="giphy-form">
+            <label for="giphy-input">Choose your giphy!</label>
+            <input type="text" id="giphy-input">
+            <br>
+    
+            <!-- Button triggers new giphy to be added -->
+            <input id="add-giphy" type="submit" value="Choose your giphy!">
+        </form>
+
+        <!-- giphys will get dumped here -->
+        <div id="giphy-view"></div>
+    </div>
+
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    <script type="text/javascript">
+
+        var topics = ['happy', 'sad', 'angry', 'excited', 'tickled', 'annoyed', 'exasperated', 'dying', 'surprised', 'humbled'];
+        var myKey = 'ZxPGi4r503kg7j3OEuQY8XSdtuYANuaI';
+        var limit = 10;
+
+          function displayGiphy() {
+
+            $("#giphy-view").empty();
+
+            var giphy = $(this).attr("data-name");
+            var queryURL = 'https://api.giphy.com/v1/gifs/search?q=' + giphy + '&api_key=' + myKey + '&limit=' + limit;
+
+            // Creates AJAX call for the specific giphy button being clicked
+            $.ajax({
+                url: queryURL,
+                method: "GET"
+            }).then(function (response) {
+                console.log(response);
+                for (var i = 0; i < limit; i++) {
+                    var newDiv = $("<div>");
+                    
+                    var pTag = $("<p>").text("Rating: " + response.data[i].rating);
+                    
+                    var newGif = $("<img>");
+                    newGif.addClass("giphy");
+                    newGif.attr("src", response.data[i].images.fixed_height_still.url);
+                    newGif.attr("data-animate", response.data[i].images.fixed_height.url);
+                    newGif.attr("data-still", response.data[i].images.fixed_height_still.url);
+                    newGif.attr("data-state", "still");
+                
+                    newDiv.append(pTag);
+                    newDiv.append(newGif);
+
+                    $("#giphy-view").prepend(newDiv);
+                }
+            });
+
+        }
+
+        function renderButtons() {
+
+            // Deletes the giphys prior to adding new giphys
+            // (this is necessary otherwise you will have repeat buttons)
+            $("#buttons-view").empty();
+
+            // Loops through the array of giphys
+            for (var i = 0; i < topics.length; i++) {
+
+                // Then dynamicaly generates buttons for each giphy in the array
+                // This code $("<button>") is all jQuery needs to create the beginning and end tag. (<button></button>)
+                var a = $("<button>");
+                // Adds a class of giphy to our button
+                a.addClass("giphy-btn");
+                // Added a data-attribute
+                a.attr("data-name", topics[i]);
+                // Provided the initial button text
+                a.text(topics[i]);
+                // Added the button to the buttons-view div
+                $("#buttons-view").append(a);
+            }
+        }
+
+        function changeState() {
+            // The attr jQuery method allows us to get or set the value of any attribute on our HTML element
+            var state = $(this).attr("data-state");
+            console.log(state);
+            // If the clicked image's state is still, update its src attribute to what its data-animate value is.
+            // Then, set the image's data-state to animate
+            // Else set src to the data-still value
+            if (state === "still") {
+                $(this).attr("src", $(this).attr("data-animate"));
+                $(this).attr("data-state", "animate");
+            } else {
+                $(this).attr("src", $(this).attr("data-still"));
+                $(this).attr("data-state", "still");
+            }
+        }
+
+        // This function handles events where the add emotion button is clicked
+        $("#add-giphy").on("click", function (event) {
+            event.preventDefault();
+            // This line of code will grab the input from the textbox
+            var giphy = $("#giphy-input").val().trim();
+
+            // The giphy from the textbox is then added to our array
+            topics.push(giphy);
+
+            // Calling renderButtons which handles the processing of our giphy array
+            renderButtons();
+
+        });
+
+        // Adding click event listeners to all elements with a class of "giphy-btn"
+        $(document).on("click", ".giphy-btn", displayGiphy);
+
+        // Adding click event listeners to all elements with a class of "giphy"
+        $(document).on("click", ".giphy", changeState);
+
+        // Calling the renderButtons function to display the intial buttons
+        renderButtons();
+
+    </script>
+</body>
+</html>
